@@ -8,7 +8,7 @@ const rl = readline.createInterface({
 });
 
 
-// pipe stream to child process
+// read stdin line by line
 rl.on('line', (line) => {
 	process.stdout.write(`line: ${line}\n`);
 });

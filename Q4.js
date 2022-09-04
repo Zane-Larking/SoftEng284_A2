@@ -1,7 +1,16 @@
 
 
+const fs = require('fs');
+const readline = require('readline');
+
+// readline interface
+const rl = readline.createInterface({
+	input: process.stdin,
+	terminal: false
+});
 
 
+const nativeDebuglogs = fs.createWriteStream("nativeDebuglogs.txt");
 
 /* ======== Heap Object =========== */
 /**
@@ -158,7 +167,7 @@ function Course(name, duration, lastDay) {
 	this.lastDay = lastDay;
 }
 Course.prototype.toString = function() {
-	return `[Course [${this.name}, ${this.duration}, ${this.lastDay}]]`;
+	return `{Course [${this.name}, ${this.duration}, ${this.lastDay}]}`;
 }
 
 /**
@@ -175,17 +184,22 @@ function parseCourseCSV(str, delimiter = ",") {
 
 
 	// get number of rows entries 
-	const rowCount = parseInt(str.slice(str.indexOf('\n')));//?
+	// const rowCount = parseInt(str.slice(str.indexOf('\n')));//?
 	
+	row = str;
 	// split input string by row entries
-	const rows = str.slice(str.indexOf("\n") + 1, str.indexOf("\x00")-1).split("\n");
+	// const rows = str.slice(str.indexOf("\n") + 1, str.indexOf("\x00")-1).split("\n");
 
 
-	return rows.map((row) => {
+	// return rows.map((row) => {
 		/* Convert each row into a array of Course Objects */
 
+
+		nativeDebuglogs.write(`row    : ${row}\n`);
+		
+
 		// split the row string into course count and array of courses
-		let a = row.split(/, \[(?=\[)/)//?
+		let a = row.split(/,\[(?=\[)/)//?
 		let entryCount = parseInt(a[0], 10);
 		let entries = a[1].substr(0, a[1].length-1)//?
 
@@ -194,10 +208,14 @@ function parseCourseCSV(str, delimiter = ",") {
 		let values = [...entries.matchAll(pattern)];//?
 		
 		// parse the values to usable types
-		return values.map(x => {
+		let out = values.map(x => {
 			return new Course(x[1], parseInt(x[2],10), parseInt(x[3],10));//?
 		})
-	});//? 
+
+		nativeDebuglogs.write(`row out: ${out}\n`);
+
+		return out;
+	// });//? 
 
 }
 
@@ -205,6 +223,7 @@ function parseCourseCSV(str, delimiter = ",") {
 function pathCalc(coursesHeap) {
 	let numOfCourses = 0;
 	let endDate = 0;
+
 
 	while(coursesHeap.length > 0) {
 		coursesHeap//?
@@ -248,16 +267,31 @@ let minValueCondition = (a, b) => {
 	
 // }
 
-process.stdin.on('data', onData);
 
-function onData(data) {
-	let rows = parseCourseCSV(data.toString().trim().replace("\r", ""));//?
-	let out = rows.map((row) => new Heap(row, minValueCondition)).map(pathCalc);//?
-	
+
+rl.on('line', onLine);
+
+var rowHeader;
+
+function onLine(line) {
+	// first run short circuit
+	if (rowHeader == undefined) {
+		rowHeader = line.toString().trim();
+		return;
+	}
+	let row = parseCourseCSV(line.toString().trim().replace("\r", ""));//?
+	let heap = new Heap(row, minValueCondition);//?
+	let out = pathCalc(heap);
+
+	nativeDebuglogs.write(`row calc: ${out}\n`);
+
 	// output
-	process.stdout.write(out.join("\n"));
-	process.exit();
+	process.stdout.write(`${out}\n`);
 }
 
 
+// debug v2
+// process.stdin.push("2\n");
+// process.stdin.push("4, [['A', 150, 200], ['B', 200, 1400], ['C', 1000, 1200], ['D', 2000, 3100]]\n");
+// process.stdin.push("2, [['A', 100, 200], ['B', 200, 1400]]\n");
 
