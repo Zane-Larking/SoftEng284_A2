@@ -1,15 +1,9 @@
+/* Mockup for visualising heaps*/
 let arr = [1,2,3,4,5,6,7,8,9];
 
 let lengths = arr.map((x)=>{return x.toString(10).length});//?
-
 let maxlength = lengths.reduce((prev, cur)=>Math.max(prev,cur), 0);//?
-
 let height = Math.floor(Math.log2(arr.length));//?
-
-
-let width = Math.pow(2, height) * maxlength +2*(Math.pow(2,height)-2);//?
-
-let widths = [];
 
 let h = 0;
 let c = 0;
@@ -32,7 +26,7 @@ for (let i = 0; i < arr.length; i++) {
 
 
 
-
+// Maths :P
 // 2 * (2 * (2 * (width) + 2) + 2) +2
 
 // 2^3 * width + 2*2^0 + 2*2^1 + 2*2^2

@@ -1,6 +1,5 @@
 
 
-// let input = "1\n4, [['A', 150, 200], ['B', 200, 1400], ['C', 1000, 1200], ['D', 2000, 3100]]\n2, [['A', 100, 200], ['B', 200, 1400]]";
 
 
 
@@ -173,11 +172,14 @@ Course.prototype.toString = function() {
  * Author: Zane Larking
  */
 function parseCourseCSV(str, delimiter = ",") {
+
+
 	// get number of rows entries 
-	const rowCount = parseInt(str.slice(str.indexOf('\n')));
+	const rowCount = parseInt(str.slice(str.indexOf('\n')));//?
 	
 	// split input string by row entries
-	const rows = str.slice(str.indexOf("\n") + 1).split("\n");//?
+	const rows = str.slice(str.indexOf("\n") + 1, str.indexOf("\x00")-1).split("\n");
+
 
 	return rows.map((row) => {
 		/* Convert each row into a array of Course Objects */
@@ -225,15 +227,14 @@ let minValueCondition = (a, b) => {
 	return (a.lastDay <= b.lastDay);
 };
 
+// 	/* debug */
+// let input = "2\n4, [['A', 150, 200], ['B', 200, 1400], ['C', 1000, 1200], ['D', 2000, 3100]]\n2, [['A', 100, 200], ['B', 200, 1400]]";
 
-
-
+// let rows = parseCourseCSV(input);//?
 // for (row of rows) {
 
-	
 // 	let minHeap = new Heap(row, minValueCondition);//?
 	
-// 	/* debug */
 // 	minHeap.top;//?
 // 	minHeap.arr;//?
 // 	minHeap.display("name");//?
@@ -250,13 +251,13 @@ let minValueCondition = (a, b) => {
 process.stdin.on('data', onData);
 
 function onData(data) {
-	let rows = parseCourseCSV(date);//?
+	let rows = parseCourseCSV(data.toString().trim().replace("\r", ""));//?
 	let out = rows.map((row) => new Heap(row, minValueCondition)).map(pathCalc);//?
 	
 	// output
 	process.stdout.write(out.join("\n"));
+	process.exit();
 }
-
 
 
 
