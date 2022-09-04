@@ -1,1 +1,1 @@
-stream ended
+stream ended after 584 milliseconds

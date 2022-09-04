@@ -11,6 +11,7 @@ const rl = readline.createInterface({
 
 
 const nativeDebuglogs = fs.createWriteStream("nativeDebuglogs.txt");
+const graphLogs = fs.createWriteStream("graphLogs.txt");
 
 /* ======== Heap Object =========== */
 /**
@@ -42,7 +43,7 @@ Heap.prototype.removeTop = function () {
 	this.swap(0,this.length-1);
 
 	// remove the highest priority element from the internal array
-	let out = this.arr.pop()//?
+	let top = this.arr.pop()//?
 
 
 	// sink new top to correct order of heap
@@ -51,7 +52,7 @@ Heap.prototype.removeTop = function () {
 	this.arr//?
 
 	// return the highest priority element
-	return out;
+	return top;
 }	
 Heap.prototype.callFilter = function (i) {
 	let parent = this.arr[i];
@@ -115,12 +116,18 @@ Heap.prototype.swap = function (i, j) {
 	this.arr[j] = temp;
 
 }
+Heap.prototype.add = function (element) {
+	this.arr.push(element);
+	this.heapify();
+}
+Heap.prototype.isEmpty = function () {
+	return this.length == 0;
+}
 Heap.prototype.display = function (key = "") {
 	// writes a visualisation of the heap in stdout 
-	process.stdout.write('\n');
+	let buffer = "\n"
 
-
-
+	// select from full string representation or individual elements
 	let displayValues = this.arr.map((x) => {
 		return (x[key] ? x[key] : x);
 	}); //?
@@ -138,26 +145,26 @@ Heap.prototype.display = function (key = "") {
 	for (let i = 0; i < displayValues.length; i++) {
 		let width = maxlength * Math.pow(2, height - h) + 2 * (Math.pow(2, height - h) - 1);
 
-		// format output
-		let strOut = `${displayValues[i]}`
-		strOut = strOut.padEnd(width / 2, " ").padStart(width, " ");
+		// format string representation of each course object 
+		let courseRepr = `${displayValues[i]}`
+		courseRepr = courseRepr.padEnd(width / 2, " ").padStart(width, " ");
 
 		// determine what delimiter to append to output
 		c++;
 		if (c == Math.pow(2, h)) {
 			c = 0;
 			h++;
-			strOut += `\n`;
+			courseRepr += `\n`;
 		}
 		else if (i < displayValues.length - 1) {
-			strOut += ', ';
+			courseRepr += ', ';
 		}
 
 		// write to stdout
-		process.stdout.write(strOut);
+		buffer += courseRepr;
 	}
-
-
+	buffer += "\n";
+	return buffer;
 }
 
 /* ======== Course Object ========= */
@@ -219,32 +226,48 @@ function parseCourseCSV(str, delimiter = ",") {
 
 }
 
+let maxDurationCondition = (a, b) => {
+	// returns a is higher priority if a is greater than or equal to b
+	return (a.duration >= b.duration);
+};
+
+let minLastDayCondition = (a, b) => {
+	// returns a is higher priority if a is less than or equal to b
+	return (a.lastDay <= b.lastDay);
+};
 
 function pathCalc(coursesHeap) {
 	let numOfCourses = 0;
 	let endDate = 0;
+	// Create a Max Heap to store courses in order of the most negatively
+	// impactful (longest) duration.
+	let takenCourses = new Heap([], maxDurationCondition);
 
+	sortedByLastDay = [];
 
+	
 	while(coursesHeap.length > 0) {
-		coursesHeap//?
-		let top = coursesHeap.removeTop();
+		let curCourse = coursesHeap.removeTop();
 
-		if (top.lastDay >= endDate + top.duration) {
-			endDate += top.duration;
-			numOfCourses ++;
+		if (curCourse.lastDay >= endDate + curCourse.duration) {
+			endDate += curCourse.duration;
+			takenCourses.add(curCourse);
+			numOfCourses++;
 		}
-		endDate//?
-		numOfCourses//?
-		top.lastDay//?
+		else if (!takenCourses.isEmpty() && takenCourses.top.duration > curCourse.duration) {
+			endDate += curCourse.duration - takenCourses.removeTop().duration;
+			takenCourses.add(curCourse);
+			graphLogs.write(takenCourses.display("duration"));
+		}
+
+		// sortedByLastDay.push(curCourse);
 	}
+
+	// nativeDebuglogs.write(`sorted: ${sortedByLastDay}\n`);
 
 	return `${numOfCourses},${endDate}`;
 }
 
-let minValueCondition = (a, b) => {
-	// returns a is higher priority if it is less than b
-	return (a.lastDay <= b.lastDay);
-};
 
 // 	/* debug */
 // let input = "2\n4, [['A', 150, 200], ['B', 200, 1400], ['C', 1000, 1200], ['D', 2000, 3100]]\n2, [['A', 100, 200], ['B', 200, 1400]]";
@@ -252,14 +275,14 @@ let minValueCondition = (a, b) => {
 // let rows = parseCourseCSV(input);//?
 // for (row of rows) {
 
-// 	let minHeap = new Heap(row, minValueCondition);//?
+// 	let minHeap = new Heap(row, minLastDayCondition);//?
 	
 // 	minHeap.top;//?
 // 	minHeap.arr;//?
-// 	minHeap.display("name");//?
-// 	minHeap.display("duration");//?
-// 	minHeap.display("lastDay");//?
-// 	minHeap.display();//?
+// 	graphLogs.write(minHeap.display("name"));//?
+// 	graphLogs.write(minHeap.display("duration"));//?
+// 	graphLogs.write(minHeap.display("lastDay"));//?
+// 	graphLogs.write(minHeap.display());//?
 
 // 	pathCalc(minHeap);
 	
@@ -280,10 +303,10 @@ function onLine(line) {
 		return;
 	}
 	let row = parseCourseCSV(line.toString().trim().replace("\r", ""));//?
-	let heap = new Heap(row, minValueCondition);//?
+	let heap = new Heap(row, minLastDayCondition);//?
 	let out = pathCalc(heap);
 
-	nativeDebuglogs.write(`row calc: ${out}\n`);
+	nativeDebuglogs.write(`row calc: ${out}\n\n`);
 
 	// output
 	process.stdout.write(`${out}\n`);

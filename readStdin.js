@@ -1,6 +1,9 @@
 //Use by running the following command
 //node readStdin.js Q4.js A2.input.test1.txt
 
+
+startTime = new Date();
+
 // input libraries
 const fs = require('fs');
 const args = require('process').argv.slice(2);
@@ -38,7 +41,9 @@ fileStream.on("end", () => {
 })
 child.on("exit", () => {
 	output.end();
-	debuglogs.end("stream ended");
+	endTime = new Date();
+	debuglogs.end(`stream ended after ${endTime - startTime} milliseconds`);
+
 })
 
 
