@@ -24,7 +24,7 @@ function Heap(arr, priorityCondition) {
 	this.heapify();
 }
 Heap.prototype.heapify = function () {
-	var i = Math.floor(this.length / 2) - 1;
+	let i = Math.floor(this.length / 2) - 1;
 	
 	for (i; i >= 0; i--) {
 		this.sink(i);
@@ -36,7 +36,7 @@ Heap.prototype.removeTop = function () {
 	this.swap(0,this.length-1);
 
 	// remove the highest priority element from the internal array
-	var top = this.arr.pop()
+	let top = this.arr.pop()
 
 
 	// sink new top to correct order of heap
@@ -48,9 +48,9 @@ Heap.prototype.removeTop = function () {
 	return top;
 }	
 Heap.prototype.callFilter = function (i) {
-	var parent = this.arr[i];
-	var leftChild = this.arr[2 * i + 1];
-	var rightChild;
+	let parent = this.arr[i];
+	let leftChild = this.arr[2 * i + 1];
+	let rightChild;
 	if (this.length >= 2 * i + 2) {
 		rightChild = this.arr[2 * i + 2];
 	}
@@ -104,7 +104,7 @@ Heap.prototype.sink = function (i) {
 }
 Heap.prototype.swap = function (i, j) {
 
-	var temp = this.arr[i];
+	let temp = this.arr[i];
 	this.arr[i] = this.arr[j];
 	this.arr[j] = temp;
 
@@ -126,28 +126,28 @@ Heap.prototype.isEmpty = function () {
 }
 Heap.prototype.display = function (key = "") {
 	// writes a visualisation of the heap in stdout 
-	var buffer = "\n"
+	let buffer = "\n"
 
 	// select from full string representation or individual elements
-	var displayValues = this.arr.map((x) => {
+	let displayValues = this.arr.map((x) => {
 		return (x[key] ? x[key] : x);
 	}); 
 
 	// create a parallel array with values coresponding to the lengths of
 	// elements to be displayed 
- 	var lengths = displayValues.map((x) => { return x.toString(10).length });
+ 	let lengths = displayValues.map((x) => { return x.toString(10).length });
 	// length of the longest element
-	var maxlength = lengths.reduce((prev, cur) => Math.max(prev, cur), 0);
+	let maxlength = lengths.reduce((prev, cur) => Math.max(prev, cur), 0);
 	// height of the heap
-	var height = Math.floor(Math.log2(displayValues.length));
+	let height = Math.floor(Math.log2(displayValues.length));
 
-	var h = 0;
-	var c = 0;
-	for (var i = 0; i < displayValues.length; i++) {
-		var width = maxlength * Math.pow(2, height - h) + 2 * (Math.pow(2, height - h) - 1);
+	let h = 0;
+	let c = 0;
+	for (let i = 0; i < displayValues.length; i++) {
+		let width = maxlength * Math.pow(2, height - h) + 2 * (Math.pow(2, height - h) - 1);
 
 		// format string representation of each course object 
-		var courseRepr = `${displayValues[i]}`
+		let courseRepr = `${displayValues[i]}`
 		courseRepr = courseRepr.padEnd(width / 2, " ").padStart(width, " ");
 
 		// determine what delimiter to append to output
@@ -191,13 +191,17 @@ Course.prototype.toString = function() {
 function parseCourseCSV(row, delimiter = ",") {
 
 	// split the row string into entry count and array of entries (courses)
-	var a = row.split(new RegExp(`${delimiter}\\\[(?=\\\[)`))
-	var _entryCount = parseInt(a[0], 10); // entryCount is unused outside of debugging
-	var entries = a[1].substr(0, a[1].length-1);
+	let a = row.split(new RegExp(`${delimiter}\\\[(?=\\\[)`))
+	let _entryCount = parseInt(a[0], 10); // entryCount is unused outside of debugging
+	let entries = a[1].substr(0, a[1].length-1);
 
 	// captures the details of each course entry (strings)
-	var pattern = /\[\D(\w+)\D, (\d+), (\d+)\]/g;
-	var values = [...entries.matchAll(pattern)];
+	let pattern = /\[\D(\w+)\D, (\d+), (\d+)\]/g;
+	let values = [];
+	while ((match = pattern.exec(entries)) !== null) {
+		values.push(match);
+	}
+
 
 	// parse the values to usable types
 	return values.map(x => {
@@ -212,7 +216,7 @@ function parseCourseCSV(row, delimiter = ",") {
  * @param  {Course} b Course object to check against 
  * @author Zane Larking
  */
-var maxDurationCondition = (a, b) => {
+let maxDurationCondition = (a, b) => {
 	return (a.duration >= b.duration);
 };
 
@@ -224,7 +228,7 @@ var maxDurationCondition = (a, b) => {
  * @param  {Course} b Course object to check against 
  * @author Zane Larking
  */
-var minLastDayCondition = (a, b) => {
+let minLastDayCondition = (a, b) => {
 	return (a.lastDay <= b.lastDay);
 };
 
@@ -234,25 +238,25 @@ var minLastDayCondition = (a, b) => {
  * @param  {} coursesHeap Heap of Course objects
  */
 function pathCalc(coursesHeap) {
-	var numOfCourses = 0;
-	var endDate = 0;
+	let numOfCourses = 0;
+	let endDate = 0;
 
 	// create a Max Heap to store courses in order of the most negatively
 	// impactful (longest) duration.
-	var takenCourses = new Heap([], maxDurationCondition);
+	let takenCourses = new Heap([], maxDurationCondition);
 
 	// add courses in order of their lastDay property
 	while(coursesHeap.length > 0) {
-		var curCourse = coursesHeap.removeTop();
+		let curCourse = coursesHeap.removeTop();
 
-		// ensures a course can be compvared before it's lastDay
+		// ensures a course can be completed before it's lastDay
 		if (curCourse.lastDay >= endDate + curCourse.duration) {
 			endDate += curCourse.duration;
 			takenCourses.add(curCourse, true);
 			numOfCourses++;
 		}
 
-		// if a course cannot be compvared before its lastDay check if its
+		// if a course cannot be completed before its lastDay check if its
 		// duration is shorter than another already taken course and swap them
 		// if they are
 		else if (!takenCourses.isEmpty()) {
@@ -292,9 +296,9 @@ function onLine(line) {
 	}
 
 	// parse 
-	var row = parseCourseCSV(line.toString().trim().replace("\r", ""));
-	var heap = new Heap(row, minLastDayCondition);
-	var out = pathCalc(heap);
+	let row = parseCourseCSV(line.toString().trim().replace("\r", ""));
+	let heap = new Heap(row, minLastDayCondition);
+	let out = pathCalc(heap);
 
 	// output
 	process.stdout.write(`${out}\n`);
